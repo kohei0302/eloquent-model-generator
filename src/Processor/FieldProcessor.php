@@ -2,6 +2,7 @@
 
 namespace Krlove\EloquentModelGenerator\Processor;
 
+use Illuminate\Support\Str;
 use Illuminate\Database\DatabaseManager;
 use Krlove\CodeGenerator\Model\DocBlockModel;
 use Krlove\CodeGenerator\Model\PropertyModel;
@@ -51,12 +52,12 @@ class FieldProcessor implements ProcessorInterface
         $columnNames = [];
         foreach ($tableDetails->getColumns() as $column) {
             $model->addProperty(new VirtualPropertyModel(
-                $column->getName(),
+                Str::camel($column->getName()),
                 $this->typeRegistry->resolveType($column->getType()->getName())
             ));
 
             if (!in_array($column->getName(), $primaryColumnNames)) {
-                $columnNames[] = $column->getName();
+                $columnNames[] = Str::camel($column->getName());
             }
         }
 
