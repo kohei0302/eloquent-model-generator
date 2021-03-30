@@ -50,6 +50,7 @@ class FieldProcessor implements ProcessorInterface
         $primaryColumnNames = $tableDetails->getPrimaryKey() ? $tableDetails->getPrimaryKey()->getColumns() : [];
 
         $columnNames = [];
+        $dateColumnNames = [];
         foreach ($tableDetails->getColumns() as $column) {
             $model->addProperty(new VirtualPropertyModel(
                 Str::camel($column->getName()),
@@ -59,11 +60,21 @@ class FieldProcessor implements ProcessorInterface
             if (!in_array($column->getName(), $primaryColumnNames)) {
                 $columnNames[] = Str::camel($column->getName());
             }
+
+            if (in_array($column->getType()->getName(), ['datetime', 'datetimetz'])) {
+                $dateColumnNames[] = Str::camel($column->getName());
+            }
         }
 
         $fillableProperty = new PropertyModel('fillable');
         $fillableProperty->setAccess('protected')
             ->setValue($columnNames)
+            ->setDocBlock(new DocBlockModel('@var string[]'));
+        $model->addProperty($fillableProperty);
+
+        $fillableProperty = new PropertyModel('dates');
+        $fillableProperty->setAccess('protected')
+            ->setValue($dateColumnNames)
             ->setDocBlock(new DocBlockModel('@var string[]'));
         $model->addProperty($fillableProperty);
 
