@@ -185,7 +185,7 @@ class RelationProcessor implements ProcessorInterface
         $method->setDocBlock(new DocBlockModel($docBlock));
 
         $model->addMethod($method);
-        $model->addProperty(new VirtualPropertyModel($name, $virtualPropertyType));
+        // $model->addProperty(new VirtualPropertyModel($name, $virtualPropertyType));
     }
 
     /**

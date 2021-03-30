@@ -52,10 +52,10 @@ class FieldProcessor implements ProcessorInterface
         $columnNames = [];
         $dateColumnNames = [];
         foreach ($tableDetails->getColumns() as $column) {
-            $model->addProperty(new VirtualPropertyModel(
-                Str::camel($column->getName()),
-                $this->typeRegistry->resolveType($column->getType()->getName())
-            ));
+            // $model->addProperty(new VirtualPropertyModel(
+            //     Str::camel($column->getName()),
+            //     $this->typeRegistry->resolveType($column->getType()->getName())
+            // ));
 
             if (!in_array($column->getName(), $primaryColumnNames)) {
                 $columnNames[] = Str::camel($column->getName());
