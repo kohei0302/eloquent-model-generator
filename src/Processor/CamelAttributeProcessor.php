@@ -47,7 +47,7 @@ class CamelAttributeProcessor implements ProcessorInterface
 
         $method = new MethodModel('toArray');
         $method
-            ->setBody('$parent = parent::toArray(); $ret = []; foreach($parent as $key => $value) { $ret[\Illuminate\Support\Str::camel($key)] = $value; }; return $ret;')
+            ->setBody('$parent = parent::toArray(); $ret = []; foreach($parent as $key => $value) { $ret[\Illuminate\Support\Str::camel((string)$key)] = $value; }; return $ret;')
             ->setDocBlock(new DocBlockModel('@return array<mixed>'));
         $model->addMethod($method);
     }
