@@ -13,6 +13,7 @@ use Krlove\EloquentModelGenerator\Processor\NamespaceProcessor;
 use Krlove\EloquentModelGenerator\Processor\RelationProcessor;
 use Krlove\EloquentModelGenerator\Processor\TableNameProcessor;
 use Krlove\EloquentModelGenerator\Processor\CamelAttributeProcessor;
+use Krlove\EloquentModelGenerator\Processor\TraitProcessor;
 
 /**
  * Class GeneratorServiceProvider
@@ -40,6 +41,7 @@ class GeneratorServiceProvider extends ServiceProvider
             TableNameProcessor::class,
             CustomPrimaryKeyProcessor::class,
             CamelAttributeProcessor::class,
+            TraitProcessor::class,
         ], self::PROCESSOR_TAG);
 
         $this->app->bind(EloquentModelBuilder::class, function ($app) {
