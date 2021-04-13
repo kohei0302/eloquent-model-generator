@@ -62,7 +62,7 @@ class FieldProcessor implements ProcessorInterface
             }
 
             if (in_array($column->getType()->getName(), ['datetime', 'datetimetz'])) {
-                $dateColumnNames[] = Str::camel($column->getName());
+                $dateColumnNames[] = $column->getName();
             }
         }
 
