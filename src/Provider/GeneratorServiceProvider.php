@@ -11,6 +11,7 @@ use Krlove\EloquentModelGenerator\Processor\ExistenceCheckerProcessor;
 use Krlove\EloquentModelGenerator\Processor\FieldProcessor;
 use Krlove\EloquentModelGenerator\Processor\NamespaceProcessor;
 use Krlove\EloquentModelGenerator\Processor\RelationProcessor;
+use Krlove\EloquentModelGenerator\Processor\SoftDeleteTraitProcessor;
 use Krlove\EloquentModelGenerator\Processor\TableNameProcessor;
 use Krlove\EloquentModelGenerator\Processor\CamelAttributeProcessor;
 use Krlove\EloquentModelGenerator\Processor\TraitProcessor;
@@ -40,6 +41,7 @@ class GeneratorServiceProvider extends ServiceProvider
             CustomPropertyProcessor::class,
             TableNameProcessor::class,
             CustomPrimaryKeyProcessor::class,
+            SoftDeleteTraitProcessor::class,
             CamelAttributeProcessor::class,
             TraitProcessor::class,
         ], self::PROCESSOR_TAG);
