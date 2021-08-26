@@ -63,7 +63,7 @@ class CustomPrimaryKeyProcessor implements ProcessorInterface
             );
             $model->addProperty($primaryKeyProperty);
         }
-        if ($column->getType()->getName() !== 'integer') {
+        if ($column->getType()->getName() !== 'integer' && $column->getType()->getName() !== 'bigint') {
             $keyTypeProperty = new PropertyModel(
                 'keyType',
                 'protected',
