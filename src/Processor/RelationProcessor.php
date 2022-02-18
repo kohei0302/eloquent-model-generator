@@ -58,6 +58,10 @@ class RelationProcessor implements ProcessorInterface
         $prefix = $this->databaseManager->connection($config->get('connection'))->getTablePrefix();
 
         $foreignKeys = $schemaManager->listTableForeignKeys($prefix . $model->getTableName());
+        usort($foreignKeys, function($a, $b) {
+            return $a->getForeignTableName() > $b->getForeignTableName() ? 1 : -1;
+        });
+
         foreach ($foreignKeys as $tableForeignKey) {
             $tableForeignColumns = $tableForeignKey->getForeignColumns();
             if (count($tableForeignColumns) !== 1) {
