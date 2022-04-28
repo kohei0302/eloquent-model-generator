@@ -46,7 +46,7 @@ class EloquentModel extends ClassModel
             $virtualPropertyType = sprintf('%s[]', $relationClass);
         } elseif ($relation instanceof BelongsTo) {
             $name = Str::singular(Str::camel($relation->getTableName()));
-            $docBlock = sprintf('@return \%s<\%s>', EloquentBelongsTo::class, $relationClassFull);
+            $docBlock = sprintf('@return \%s<\%s, self>', EloquentBelongsTo::class, $relationClassFull);
 
             $virtualPropertyType = $relationClass;
         } elseif ($relation instanceof BelongsToMany) {
