@@ -7,46 +7,20 @@ use Illuminate\Database\DatabaseManager;
 use Krlove\CodeGenerator\Model\DocBlockModel;
 use Krlove\CodeGenerator\Model\PropertyModel;
 use Krlove\CodeGenerator\Model\VirtualPropertyModel;
-use Krlove\EloquentModelGenerator\Config;
+use Krlove\EloquentModelGenerator\Config\Config;
+use Krlove\EloquentModelGenerator\Helper\Prefix;
 use Krlove\EloquentModelGenerator\Model\EloquentModel;
 use Krlove\EloquentModelGenerator\TypeRegistry;
 
-/**
- * Class FieldProcessor
- * @package Krlove\EloquentModelGenerator\Processor
- */
 class FieldProcessor implements ProcessorInterface
 {
-    /**
-     * @var DatabaseManager
-     */
-    protected $databaseManager;
-
-    /**
-     * @var TypeRegistry
-     */
-    protected $typeRegistry;
-
-    /**
-     * FieldProcessor constructor.
-     * @param DatabaseManager $databaseManager
-     * @param TypeRegistry $typeRegistry
-     */
-    public function __construct(DatabaseManager $databaseManager, TypeRegistry $typeRegistry)
+    public function __construct(private DatabaseManager $databaseManager, private TypeRegistry $typeRegistry) {}
+    
+    public function process(EloquentModel $model, Config $config): void
     {
-        $this->databaseManager = $databaseManager;
-        $this->typeRegistry = $typeRegistry;
-    }
+        $schemaManager = $this->databaseManager->connection($config->getConnection())->getDoctrineSchemaManager();
 
-    /**
-     * @inheritdoc
-     */
-    public function process(EloquentModel $model, Config $config)
-    {
-        $schemaManager = $this->databaseManager->connection($config->get('connection'))->getDoctrineSchemaManager();
-        $prefix        = $this->databaseManager->connection($config->get('connection'))->getTablePrefix();
-
-        $tableDetails       = $schemaManager->listTableDetails($prefix . $model->getTableName());
+        $tableDetails = $schemaManager->listTableDetails(Prefix::add($model->getTableName()));
         $primaryColumnNames = $tableDetails->getPrimaryKey() ? $tableDetails->getPrimaryKey()->getColumns() : [];
 
         $columnNames = [];
@@ -77,14 +51,9 @@ class FieldProcessor implements ProcessorInterface
             ->setValue($dateColumnNames)
             ->setDocBlock(new DocBlockModel('@var string[]'));
         $model->addProperty($fillableProperty);
-
-        return $this;
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function getPriority()
+    public function getPriority(): int
     {
         return 5;
     }

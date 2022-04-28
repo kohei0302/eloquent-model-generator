@@ -2,58 +2,56 @@
 
 namespace Krlove\EloquentModelGenerator\Helper;
 
+use Doctrine\DBAL\Schema\Table;
 use Illuminate\Support\Str;
 
-/**
- * Class EmgHelper
- * @package Krlove\EloquentModelGenerator\Helper
- */
 class EmgHelper
 {
-    /**
-     * @var string
-     */
-    const DEFAULT_PRIMARY_KEY = 'id';
+    public const DEFAULT_PRIMARY_KEY = 'id';
 
-    /**
-     * @param string $fullClassName
-     * @return string
-     */
-    public function getShortClassName($fullClassName)
+    public static function getShortClassName(string $fqcn): string
     {
-        $pieces = explode('\\', $fullClassName);
+        $pieces = explode('\\', $fqcn);
 
         return end($pieces);
     }
 
-    /**
-     * @param string $className
-     * @return string
-     */
-    public function getDefaultTableName($className)
+    public static function getTableNameByClassName(string $className): string
     {
         return Str::plural(Str::snake($className));
     }
 
-    /**
-     * @param string $table
-     * @return string
-     */
-    public function getDefaultForeignColumnName($table)
+    public static function getClassNameByTableName(string $tableName): string
     {
-        return sprintf('%s_%s', Str::singular($table), self::DEFAULT_PRIMARY_KEY);
+        return Str::singular(Str::studly($tableName));
     }
 
-    /**
-     * @param string $tableOne
-     * @param string $tableTwo
-     * @return string
-     */
-    public function getDefaultJoinTableName($tableOne, $tableTwo)
+    public static function getDefaultForeignColumnName(string $tableName): string
     {
-        $tables = [Str::singular($tableOne), Str::singular($tableTwo)];
+        return sprintf('%s_%s', Str::singular($tableName), self::DEFAULT_PRIMARY_KEY);
+    }
+
+    public static function getDefaultJoinTableName(string $tableNameOne, string $tableNameTwo): string
+    {
+        $tables = [Str::singular($tableNameOne), Str::singular($tableNameTwo)];
         sort($tables);
 
-        return sprintf(implode('_', $tables));
+        return implode('_', $tables);
+    }
+
+    public static function isColumnUnique(Table $table, string $column): bool
+    {
+        foreach ($table->getIndexes() as $index) {
+            $indexColumns = $index->getColumns();
+            if (count($indexColumns) !== 1) {
+                continue;
+            }
+            $indexColumn = $indexColumns[0];
+            if ($indexColumn === $column && $index->isUnique()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

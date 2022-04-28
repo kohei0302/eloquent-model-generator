@@ -2,59 +2,23 @@
 
 namespace Krlove\EloquentModelGenerator\Processor;
 
-use Doctrine\DBAL\Schema\Table;
 use Illuminate\Database\DatabaseManager;
-use Illuminate\Database\Eloquent\Relations\BelongsTo as EloquentBelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany as EloquentBelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany as EloquentHasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne as EloquentHasOne;
-use Illuminate\Support\Str;
-use Krlove\CodeGenerator\Model\DocBlockModel;
-use Krlove\CodeGenerator\Model\MethodModel;
-use Krlove\CodeGenerator\Model\VirtualPropertyModel;
-use Krlove\EloquentModelGenerator\Config;
-use Krlove\EloquentModelGenerator\Exception\GeneratorException;
+use Krlove\EloquentModelGenerator\Config\Config;
 use Krlove\EloquentModelGenerator\Helper\EmgHelper;
+use Krlove\EloquentModelGenerator\Helper\Prefix;
 use Krlove\EloquentModelGenerator\Model\BelongsTo;
 use Krlove\EloquentModelGenerator\Model\BelongsToMany;
 use Krlove\EloquentModelGenerator\Model\EloquentModel;
 use Krlove\EloquentModelGenerator\Model\HasMany;
 use Krlove\EloquentModelGenerator\Model\HasOne;
-use Krlove\EloquentModelGenerator\Model\Relation;
 
-/**
- * Class RelationProcessor
- * @package Krlove\EloquentModelGenerator\Processor
- */
 class RelationProcessor implements ProcessorInterface
 {
-    /**
-     * @var DatabaseManager
-     */
-    protected $databaseManager;
+    public function __construct(private DatabaseManager $databaseManager) {}
 
-    /**
-     * @var EmgHelper
-     */
-    protected $helper;
-
-    /**
-     * FieldProcessor constructor.
-     * @param DatabaseManager $databaseManager
-     * @param EmgHelper $helper
-     */
-    public function __construct(DatabaseManager $databaseManager, EmgHelper $helper)
+    public function process(EloquentModel $model, Config $config): void
     {
-        $this->databaseManager = $databaseManager;
-        $this->helper = $helper;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function process(EloquentModel $model, Config $config)
-    {
-        $schemaManager = $this->databaseManager->connection($config->get('connection'))->getDoctrineSchemaManager();
+        $schemaManager = $this->databaseManager->connection($config->getConnection())->getDoctrineSchemaManager();
         $prefix = $this->databaseManager->connection($config->get('connection'))->getTablePrefix();
 
         $foreignKeys = $schemaManager->listTableForeignKeys($prefix . $model->getTableName());
@@ -76,57 +40,58 @@ class RelationProcessor implements ProcessorInterface
             $this->addRelation($model, $relation);
         }
 
+        $prefixedTableName = Prefix::add($model->getTableName());
         $tables = $schemaManager->listTables();
         foreach ($tables as $table) {
-            if ($table->getName() === $prefix . $model->getTableName()) {
-                continue;
-            }
-
-            $foreignKeys = $table->getForeignKeys();
+            $foreignKeys = $schemaManager->listTableForeignKeys($table->getName());
             foreach ($foreignKeys as $name => $foreignKey) {
-                if ($foreignKey->getForeignTableName() === $prefix . $model->getTableName()) {
-                    $localColumns = $foreignKey->getLocalColumns();
-                    if (count($localColumns) !== 1) {
-                        continue;
-                    }
+                $localColumns = $foreignKey->getLocalColumns();
+                if (count($localColumns) !== 1) {
+                    continue;
+                }
 
+                if ($table->getName() === $prefixedTableName) {
+                    $relation = new BelongsTo(
+                        Prefix::remove($foreignKey->getForeignTableName()),
+                        $foreignKey->getLocalColumns()[0],
+                        $foreignKey->getForeignColumns()[0]
+                    );
+                    $model->addRelation($relation);
+                } elseif ($foreignKey->getForeignTableName() === $prefixedTableName) {
                     if (count($foreignKeys) === 2 && count($table->getColumns()) === 2) {
                         $keys = array_keys($foreignKeys);
                         $key = array_search($name, $keys) === 0 ? 1 : 0;
                         $secondForeignKey = $foreignKeys[$keys[$key]];
-                        $secondForeignTable = $this->removePrefix($prefix, $secondForeignKey->getForeignTableName());
+                        $secondForeignTable = Prefix::remove($secondForeignKey->getForeignTableName());
 
                         $relation = new BelongsToMany(
                             $secondForeignTable,
-                            $this->removePrefix($prefix, $table->getName()),
+                            Prefix::remove($table->getName()),
                             $localColumns[0],
                             $secondForeignKey->getLocalColumns()[0]
                         );
-                        $this->addRelation($model, $relation);
+                        $model->addRelation($relation);
 
                         break;
                     } else {
-                        $tableName = $this->removePrefix($prefix, $foreignKey->getLocalTableName());
+                        $tableName = Prefix::remove($table->getName());
                         $foreignColumn = $localColumns[0];
                         $localColumn = $foreignKey->getForeignColumns()[0];
 
-                        if ($this->isColumnUnique($table, $foreignColumn)) {
+                        if (EmgHelper::isColumnUnique($table, $foreignColumn)) {
                             $relation = new HasOne($tableName, $foreignColumn, $localColumn);
                         } else {
                             $relation = new HasMany($tableName, $foreignColumn, $localColumn);
                         }
 
-                        $this->addRelation($model, $relation);
+                        $model->addRelation($relation);
                     }
                 }
             }
         }
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function getPriority()
+    public function getPriority(): int
     {
         return 5;
     }

@@ -5,46 +5,20 @@ namespace Krlove\EloquentModelGenerator\Processor;
 use Illuminate\Database\DatabaseManager;
 use Krlove\CodeGenerator\Model\DocBlockModel;
 use Krlove\CodeGenerator\Model\PropertyModel;
-use Krlove\EloquentModelGenerator\Config;
+use Krlove\EloquentModelGenerator\Config\Config;
+use Krlove\EloquentModelGenerator\Helper\Prefix;
 use Krlove\EloquentModelGenerator\Model\EloquentModel;
 use Krlove\EloquentModelGenerator\TypeRegistry;
 
-/**
- * Class CustomPrimaryKeyProcessor
- * @package Krlove\EloquentModelGenerator\Processor
- */
 class CustomPrimaryKeyProcessor implements ProcessorInterface
 {
-    /**
-     * @var DatabaseManager
-     */
-    protected $databaseManager;
+    public function __construct(private DatabaseManager $databaseManager, private TypeRegistry $typeRegistry) {}
 
-    /**
-     * @var TypeRegistry
-     */
-    protected $typeRegistry;
-
-    /**
-     * FieldProcessor constructor.
-     * @param DatabaseManager $databaseManager
-     * @param TypeRegistry $typeRegistry
-     */
-    public function __construct(DatabaseManager $databaseManager, TypeRegistry $typeRegistry)
+    public function process(EloquentModel $model, Config $config): void
     {
-        $this->databaseManager = $databaseManager;
-        $this->typeRegistry = $typeRegistry;
-    }
+        $schemaManager = $this->databaseManager->connection($config->getConnection())->getDoctrineSchemaManager();
 
-    /**
-     * @inheritdoc
-     */
-    public function process(EloquentModel $model, Config $config)
-    {
-        $schemaManager = $this->databaseManager->connection($config->get('connection'))->getDoctrineSchemaManager();
-        $prefix        = $this->databaseManager->connection($config->get('connection'))->getTablePrefix();
-
-        $tableDetails = $schemaManager->listTableDetails($prefix . $model->getTableName());
+        $tableDetails = $schemaManager->listTableDetails(Prefix::add($model->getTableName()));
         $primaryKey = $tableDetails->getPrimaryKey();
         if ($primaryKey === null) {
             return;
@@ -63,6 +37,7 @@ class CustomPrimaryKeyProcessor implements ProcessorInterface
             );
             $model->addProperty($primaryKeyProperty);
         }
+
         if ($column->getType()->getName() !== 'integer' && $column->getType()->getName() !== 'bigint') {
             $keyTypeProperty = new PropertyModel(
                 'keyType',
@@ -74,7 +49,8 @@ class CustomPrimaryKeyProcessor implements ProcessorInterface
             );
             $model->addProperty($keyTypeProperty);
         }
-        if ($column->getAutoincrement() !== true) {
+
+        if (!$column->getAutoincrement()) {
             $autoincrementProperty = new PropertyModel('incrementing', 'public', false);
             $autoincrementProperty->setDocBlock(
                 new DocBlockModel('Indicates if the IDs are auto-incrementing.', '', '@var bool')
@@ -83,10 +59,7 @@ class CustomPrimaryKeyProcessor implements ProcessorInterface
         }
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function getPriority()
+    public function getPriority(): int
     {
         return 6;
     }

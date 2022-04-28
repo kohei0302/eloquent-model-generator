@@ -3,27 +3,17 @@
 namespace Krlove\EloquentModelGenerator\Processor;
 
 use Krlove\CodeGenerator\Model\NamespaceModel;
-use Krlove\EloquentModelGenerator\Config;
+use Krlove\EloquentModelGenerator\Config\Config;
 use Krlove\EloquentModelGenerator\Model\EloquentModel;
 
-/**
- * Class NamespaceProcessor
- * @package Krlove\EloquentModelGenerator\Processor
- */
 class NamespaceProcessor implements ProcessorInterface
 {
-    /**
-     * @inheritdoc
-     */
-    public function process(EloquentModel $model, Config $config)
+    public function process(EloquentModel $model, Config $config): void
     {
-        $model->setNamespace(new NamespaceModel($config->get('namespace')));
+        $model->setNamespace(new NamespaceModel($config->getNamespace()));
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function getPriority()
+    public function getPriority(): int
     {
         return 6;
     }
