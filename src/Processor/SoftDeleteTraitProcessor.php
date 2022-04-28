@@ -4,7 +4,7 @@ namespace Krlove\EloquentModelGenerator\Processor;
 
 use Illuminate\Database\DatabaseManager;
 use Krlove\CodeGenerator\Model\UseTraitModel;
-use Krlove\EloquentModelGenerator\Config;
+use Krlove\EloquentModelGenerator\Config\Config;
 use Krlove\EloquentModelGenerator\Model\EloquentModel;
 
 /**
@@ -35,10 +35,10 @@ class SoftDeleteTraitProcessor implements ProcessorInterface
     /**
      * @inheritdoc
      */
-    public function process(EloquentModel $model, Config $config)
+    public function process(EloquentModel $model, Config $config): void
     {
-        $schemaManager = $this->databaseManager->connection($config->get('connection'))->getDoctrineSchemaManager();
-        $prefix        = $this->databaseManager->connection($config->get('connection'))->getTablePrefix();
+        $schemaManager = $this->databaseManager->connection($config->getConnection())->getDoctrineSchemaManager();
+        $prefix        = $this->databaseManager->connection($config->getConnection())->getTablePrefix();
 
         $tableDetails = $schemaManager->listTableDetails($prefix . $model->getTableName());
 
@@ -53,7 +53,7 @@ class SoftDeleteTraitProcessor implements ProcessorInterface
     /**
      * @inheritdoc
      */
-    public function getPriority()
+    public function getPriority(): int
     {
         return 6;
     }

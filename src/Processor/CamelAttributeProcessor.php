@@ -9,7 +9,7 @@ use Krlove\CodeGenerator\Model\DocBlockModel;
 use Krlove\CodeGenerator\Model\MethodModel;
 use Krlove\CodeGenerator\Model\PropertyModel;
 use Krlove\CodeGenerator\Model\UseClassModel;
-use Krlove\EloquentModelGenerator\Config;
+use Krlove\EloquentModelGenerator\Config\Config;
 use Krlove\EloquentModelGenerator\Helper\EmgHelper;
 use Krlove\EloquentModelGenerator\Model\EloquentModel;
 
@@ -43,10 +43,10 @@ class CamelAttributeProcessor implements ProcessorInterface
     /**
      * @inheritdoc
      */
-    public function process(EloquentModel $model, Config $config)
+    public function process(EloquentModel $model, Config $config): void
     {
-        $schemaManager = $this->databaseManager->connection($config->get('connection'))->getDoctrineSchemaManager();
-        $prefix        = $this->databaseManager->connection($config->get('connection'))->getTablePrefix();
+        $schemaManager = $this->databaseManager->connection($config->getConnection())->getDoctrineSchemaManager();
+        $prefix        = $this->databaseManager->connection($config->getConnection())->getTablePrefix();
         $tableDetails       = $schemaManager->listTableDetails($prefix . $model->getTableName());
 
         $columnNames = [];
@@ -85,7 +85,7 @@ class CamelAttributeProcessor implements ProcessorInterface
     /**
      * @inheritdoc
      */
-    public function getPriority()
+    public function getPriority(): int
     {
         return 5;
     }
